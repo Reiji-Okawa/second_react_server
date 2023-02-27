@@ -7,6 +7,9 @@ const server = jsonServer.create();
 const router = jsonServer.router('db.json');
 const middlewares = jsonServer.defaults();
 const port = process.env.PORT || 8000;
+
+const data = require('./db.json');
+
 const authUser = {
   id: '1',
   username: 'taketo',
@@ -36,7 +39,33 @@ server.post('/auth/signin', (req, res) => {
   res.status(201).json(authUser);
 });
 
+server.post('/auth/signup', (req, res) => {
+  let flag = Number
+  // data = fetcher('http://localhost:8000/users', {
+  //   method: 'POST',
+  //   body: req.body
+  // }).then();
+  console.log(data)
+  // console.log(router)
+  if (
+    !(req.body['username'] === 'user' && req.body['password'] === 'password')
+  ) {
+    return res.status(401).json({
+      message: 'Username or password are already used',
+    });
+  }
+
+  res.cookie('token', 'dummy_token', {
+    maxAge: 3600 * 1000,
+    httpOnly: true,
+  });
+  res.status(201).json(authUser);
+});
+
+
+
 server.post('/auth/signout', (req, res) => {
+  console.log("signout");
   res.cookie('token', '', {
     maxAge: 0,
     httpOnly: true,
@@ -79,3 +108,22 @@ server.listen(port, (err) => {
   console.log("Start listening...");
   console.log('http://localhost:' + port);
 });
+
+const fetcher = async (
+  resource,
+  init,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+)  => {
+  const res = await fetch(resource, init)
+
+  if (!res.ok) {
+    const errorRes = await res.json()
+    const error = new Error(
+      errorRes.message ?? 'APIリクエスト中にエラーが発生しました',
+    )
+
+    throw error
+  }
+
+  return res.json()
+}
